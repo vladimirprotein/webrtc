@@ -1,8 +1,13 @@
-var express = require('express');
-var fs = require('fs');
+const express = require('express');
+const https = require('https');
+const fs = require('fs');
 var app = express();
-var http = require('http').createServer(app);
-var io = require('socket.io')(http);
+var options = {
+key: fs.readFileSync('/selfsigned.key'),
+cert: fs.readFileSync('/selfsigned.crt')
+};
+var server = https.createServer(options, app);
+var io = require('socket.io')(server);
 var users = {};
 app.use(express.static('public'));
 
@@ -13,7 +18,7 @@ app.get('/', function(req, res){
 });
 
 // listening on port 3000..
-http.listen(3000, function(){
+server.listen(3000, function(){
   console.log('listening on *:3000');
 });
 
