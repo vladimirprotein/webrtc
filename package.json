@@ -1,0 +1,18 @@
+{
+  "name": "demo-webrtc",
+  "version": "0.0.1",
+  "description": "WebRTC chat app",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server"
+  },
+  "author": "Animesh",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "file-system": "^2.2.2",
+    "node-static": "^0.7.10",
+    "socket.io": "^2.0.4"
+  }
+}

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>webRTC</title>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sh0284-ggOyR0iXCbMQv3Xipm024MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<style type="text/css">
+		video{
+			max-width: 100%;
+			width: 320px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container-fluid">
+		<h1 class="text-center pt-3">WebRTC</h1>
+		<h5 class="text-center text-secondary mb-5" id="displayusername"></h5>
+		<div class="row">
+			<div class="col-4 col-sm-4">
+				<span>Set Username: </span><input type="text" name="" id="username" autocomplete="off">
+				<button id="usernamesubmit" class="btn-sm btn-secondary">Submit</button>
+			</div>
+			<div class="col-4 col-sm-4">
+				<span class="">Call: </span><input class="" type="text" id="callee" autocomplete="off">
+				<button id="call" class="btn-sm btn-secondary">Call</button>
+			</div>
+			<div class="col-4 col-sm-4">
+				<button id="start" class="btn btn-success">Start</button>
+				<button id="end" class="btn btn-danger">END</button>
+			</div>
+		</div>
+		<div class="row mt-5">
+			<div class="col-6 col-sm-6">
+				<video autoplay playsinline id="localvideo"></video>
+			</div>
+			<div class="col-6 col-sm-6">
+				<video autoplay playsinline id="remotevideo"></video>
+			</div>
+		</div>
+	</div>
+
+
+
+
+	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+	<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src="/js/main.js"></script>
+
+
+</body>
+</html>
