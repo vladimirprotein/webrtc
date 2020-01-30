@@ -88,6 +88,7 @@ $('#usernamesubmit').click((e)=>{
 		//callback function definition..
 		if(data == 'success'){
 			$('#displayusername').html('username: '+ $('#username').val().toLowerCase().trim());
+			window.myend = $('#username').val().toLowerCase().trim();
 			$('#username').val('');
 		}
 		else{
@@ -101,9 +102,10 @@ $('#usernamesubmit').click((e)=>{
 // bind click event on call button.. (function definition for call button)
 $('#call').click((e)=>{
 	e.preventDefault();
-	var callee = $('#callee').val();
+	var callee = $('#callee').val().toLowerCase().trim();
 	socket.emit('call request', {callee: callee}, (data)=>{
 		if(data == 'success'){
+			window.otherend = callee;
 			trace('Starting call.');
             var startTime = window.performance.now();
 
@@ -125,7 +127,7 @@ $('#call').click((e)=>{
                   'iceconnectionstatechange', handleConnectionChange);
             localPeerConnection.addEventListener('addstream', gotRemoteMediaStream);
 
-            socket.emit('call button clicked', {callee: callee});
+            socket.emit('call button clicked', {callee: window.otherend});
 
 
     		// adding local stream to local peer connection..
@@ -153,19 +155,11 @@ function handleConnection(event){
 	var iceCandidate = event.candidate;
 	if(iceCandidate){
 		const newIceCandidate = new RTCIceCandidate(iceCandidate);
-        let callee = $('#callee').val();
-        socket.emit('add ice candidate', {callee: callee, iceCandidate: JSON.stringify(newIceCandidate)});
-        trace('INSIDE handleConnection');
+        socket.emit('add ice candidate', {callee: window.otherend, iceCandidate: JSON.stringify(newIceCandidate)});
+        //trace('INSIDE handleConnection');
     }
 }
-function handleConnection2(event){
-	var iceCandidate = event.candidate;
-	if(iceCandidate){
-		const newIceCandidate = new RTCIceCandidate(iceCandidate);
-		socket.emit('add ice candidate', {callee: window.caller, iceCandidate: JSON.stringify(newIceCandidate)});
-	}
-    trace('INSIDE handleConnection2');
-}
+
 function handleConnectionChange(event) {
     const peerConnection = event.target;
     console.log('ICE state change event: ', event);
@@ -174,30 +168,29 @@ function handleConnectionChange(event) {
     trace('INSIDE handleConnectionChange');
 }
 function createdOffer(description){
-	trace(`Offer from localPeerConnection:\n${description.sdp}`);
+	//trace(`Offer from localPeerConnection:\n${description.sdp}`);
     trace('localPeerConnection setLocalDescription start.');
     localPeerConnection.setLocalDescription(description);
     // .then(() => {
     //  	setLocalDescriptionSuccess(localPeerConnection);
     // }).catch(setSessionDescriptionError);
     // console.log(callee)
-    let callee = $('#callee').val();
 
-socket.emit('local description', {callee: callee, description: JSON.stringify(description)});
-trace('INSIDE createdOffer');
+socket.emit('local description', {callee: window.otherend, description: JSON.stringify(description)});
+trace('Offer created from my side..');
 }
 
 function createdAnswer(description){
 	//trace(`Answer from remotePeerConnection:\n${description.sdp}.`);
 
-   trace('remotePeerConnection setLocalDescription start.');
+   trace('Setting my local description..');
    localPeerConnection.setLocalDescription(description);
     // .then(() => {
     //   setLocalDescriptionSuccess(localPeerConnection);
     // }).catch(setSessionDescriptionError);
 
-    socket.emit('answer', {caller: window.caller, description: JSON.stringify(description)});
-    trace('INSIDE createdAnswer');
+    socket.emit('answer', {caller: window.otherend, description: JSON.stringify(description)});
+    trace('Sent my description to the caller..');
 }
 
 // Logs error when setting session description fails.
@@ -220,42 +213,41 @@ function setRemoteDescriptionSuccess(peerConnection) {
 // bind click event on end button.. (function definition for end button)
 $('#end').click((e)=>{
 	e.preventDefault();
-	localVideo.srcObject = null;
+	remoteVideo.srcObject = null;
 	localPeerConnection.close();
-	socket.emit
-	trace('call ended');
+	socket.emit('call ended', {to: window.otherend});
+	trace('call ended from my side');
+	alert('Call Ended..')
 })
 
 
 
 
 socket.on('call button clicked', (obj)=>{
-	window.caller2 = obj.caller;
+	window.otherend = obj.caller;
 	trace('Starting call.');
 	var startTime = window.performance.now();
 
 	// Get local media stream tracks.
-  const videoTracks = localStream.getVideoTracks();
-  const audioTracks = localStream.getAudioTracks();
-  if (videoTracks.length > 0) {
-     trace(`Using video device: ${videoTracks[0].label}.`);
- }
- if (audioTracks.length > 0) {
-     trace(`Using audio device: ${audioTracks[0].label}.`);
- }
+  	const videoTracks = localStream.getVideoTracks();
+  	const audioTracks = localStream.getAudioTracks();
+  	if (videoTracks.length > 0) {
+     	trace(`Using video device: ${videoTracks[0].label}.`);
+ 	}
+ 	if (audioTracks.length > 0) {
+    	trace(`Using audio device: ${audioTracks[0].label}.`);
+ 	}
 
 	// Create peer connections and add behavior.
 	localPeerConnection = new RTCPeerConnection(servers);
-  trace('LOCAL PEER CONNECTION::::'+localPeerConnection);
-  localPeerConnection.addEventListener('icecandidate', handleConnection2);
-  localPeerConnection.addEventListener(
-     'iceconnectionstatechange', handleConnectionChange);
-  localPeerConnection.addEventListener('addstream', gotRemoteMediaStream);
+  	trace('LOCAL PEER CONNECTION::::'+localPeerConnection);
+  	localPeerConnection.addEventListener('icecandidate', handleConnection);
+  	localPeerConnection.addEventListener('iceconnectionstatechange', handleConnectionChange);
+  	localPeerConnection.addEventListener('addstream', gotRemoteMediaStream);
 
 	// adding local stream to local peer connection..
 	localPeerConnection.addStream(localStream);
 	trace('Added local stream to localPeerConnection.');
-	trace('localPeerConnection createOffer start.');
 
 });
 
@@ -268,26 +260,34 @@ socket.on('add ice candidate', (obj)=>{
 
 // setting remote description on call request..
 socket.on('local description', (obj)=>{
-	window.caller = obj.caller;
+	trace('Description received. Setting it as remote description..')
 	localPeerConnection.setRemoteDescription(JSON.parse(obj.description))
     .then(() => {
       setRemoteDescriptionSuccess(localPeerConnection);
   }).catch(setSessionDescriptionError);
 
     // create answer..
-    trace('remotePeerConnection createAnswer start.');
+    trace('Creating answer..');
     localPeerConnection.createAnswer()
     .then(createdAnswer)
     .catch(setSessionDescriptionError);
 });
 
 socket.on('answer', (obj)=>{
-	trace('localPeerConnection setRemoteDescription start.');
-   localPeerConnection.setRemoteDescription(JSON.parse(obj.description))
-   .then(() => {
+	trace('Received description of the callee..');
+   	localPeerConnection.setRemoteDescription(JSON.parse(obj.description))
+   	.then(() => {
       setRemoteDescriptionSuccess(localPeerConnection);
-  }).catch(setSessionDescriptionError);
+  	}).catch(setSessionDescriptionError);
+  	trace('Set my remote description with the callee description..')
 });
+
+socket.on('call ended', (obj)=>{
+	trace('Other user ended the call..');
+	remoteVideo.srcObject = null;
+	localPeerConnection.close();
+	alert('Other user ended the call');
+})
 
 
 

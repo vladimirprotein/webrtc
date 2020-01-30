@@ -5,9 +5,17 @@
 	<title>webRTC</title>
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sh0284-ggOyR0iXCbMQv3Xipm024MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 	<style type="text/css">
-		video{
+		video {
 			max-width: 100%;
-			width: 320px;
+  			height: auto;
+		}
+		#localvideo {
+			transform: rotateY(180deg);
+    		-webkit-transform:rotateY(180deg); /* Safari and Chrome */
+    		-moz-transform:rotateY(180deg); /* Firefox */
+		}
+		#remotevideo {
+
 		}
 	</style>
 </head>
@@ -22,18 +30,18 @@
 			</div>
 			<div class="col-4 col-sm-4">
 				<span class="">Call: </span><input class="" type="text" id="callee" autocomplete="off">
-				<button id="call" class="btn-sm btn-secondary">Call</button>
+				<button id="call" class="btn-sm btn-success">Call</button>
 			</div>
 			<div class="col-4 col-sm-4">
-				<button id="start" class="btn btn-success">Start</button>
 				<button id="end" class="btn btn-danger">END</button>
 			</div>
 		</div>
 		<div class="row mt-5">
-			<div class="col-6 col-sm-6">
+			<div class="col-3 col-sm-3">
 				<video autoplay playsinline id="localvideo"></video>
 			</div>
-			<div class="col-6 col-sm-6">
+			
+			<div class="col-7 col-sm-7">
 				<video autoplay playsinline id="remotevideo"></video>
 			</div>
 		</div>

@@ -81,4 +81,10 @@ io.on('connection', (socket)=>{
 		soc2 = users[obj.caller];
 		soc2.emit('answer', {description: obj.description});
 	});
+
+	socket.on('call ended', (obj)=>{
+		console.log(socket.username+ ' ended the call with '+ obj.to);
+		soc3 = users[obj.to];
+		soc3.emit('call ended', {from: socket.username});
+	})
 });
