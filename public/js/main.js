@@ -36,23 +36,35 @@ const usernameButton = document.getElementById('usernamesubmit');
 
 
 // setting media stream constraints to pass as an argument to getUserMedia
+// for local video element with no audio
+const mediaStreamConstraintsL = {
+	video:true,
+	audio:false,
+};
+// for remote video element with audio
 const mediaStreamConstraints = {
 	video:true,
 	audio:true,
 };
 
-// showing video stream to local video element on clicking start button..
-$('#start').click((e)=>{
-	e.preventDefault();
-	navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
+// getting webcam stream for local video element
+navigator.mediaDevices.getUserMedia(mediaStreamConstraintsL)
+	.then(function(stream){
+		localVideo.srcObject = stream;
+	}).catch(handleLocalMediaStreamError);
+trace('Requested stream for local video element. ');
+
+// set localstream (with audio) for sending to other peer.
+navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
 	.then(gotLocalMediaStream).catch(handleLocalMediaStreamError);
-	trace('Requesting local stream.');
-})
+trace('Requesting stream with audio for sending purpose.');
+
+
 // callback for get local user media stream
 function gotLocalMediaStream(stream) {
-	localVideo.srcObject = stream;
+	//localVideo.srcObject = stream;
     localStream = stream;
-    trace('Received Local stream..');
+    trace('localStream ready to send');
 }
 // error handling function for getting local media stream..
 function handleLocalMediaStreamError(error) {
@@ -119,7 +131,6 @@ $('#call').click((e)=>{
     		// adding local stream to local peer connection..
     		localPeerConnection.addStream(localStream);
     		trace('Added local stream to localPeerConnection.');
-            trace('localPeerConnection createOffer start.');
 
   			// setting offer options..
   			const offerOptions = {
@@ -127,33 +138,15 @@ $('#call').click((e)=>{
   				offerToReceiveAudio: 1,
             };
             // creating offer with local peer conection..
+            trace('localPeerConnection createOffer starting.');
             localPeerConnection.createOffer(offerOptions)
             .then(createdOffer).catch(setSessionDescriptionError);
-
-
-
-
-
         }
         else{
             alert(data);
         }
     });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 function handleConnection(event){
@@ -173,7 +166,6 @@ function handleConnection2(event){
 	}
     trace('INSIDE handleConnection2');
 }
-
 function handleConnectionChange(event) {
     const peerConnection = event.target;
     console.log('ICE state change event: ', event);
@@ -181,7 +173,6 @@ function handleConnectionChange(event) {
     //  `${peerConnection.iceConnectionState}.`);
     trace('INSIDE handleConnectionChange');
 }
-
 function createdOffer(description){
 	trace(`Offer from localPeerConnection:\n${description.sdp}`);
     trace('localPeerConnection setLocalDescription start.');
@@ -209,66 +200,31 @@ function createdAnswer(description){
     trace('INSIDE createdAnswer');
 }
 
-
-
 // Logs error when setting session description fails.
 function setSessionDescriptionError(error) {
   trace(`Failed to create session description: ${error.toString()}.`);
 }
-
 // Logs success when setting session description.
 function setDescriptionSuccess(peerConnection, functionName) {
   const peerName = getPeerName(peerConnection);
   trace(`${peerName} ${functionName} complete.`);
 }
-
 // Logs success when localDescription is set.
 function setLocalDescriptionSuccess(peerConnection) {
   setDescriptionSuccess(peerConnection, 'setLocalDescription');
 }
-
 // Logs success when remoteDescription is set.
 function setRemoteDescriptionSuccess(peerConnection) {
   setDescriptionSuccess(peerConnection, 'setRemoteDescription');
 }
-
-
-
-
-
-
-
-
-
-
-
-
 // bind click event on end button.. (function definition for end button)
 $('#end').click((e)=>{
 	e.preventDefault();
 	localVideo.srcObject = null;
+	localPeerConnection.close();
+	socket.emit
 	trace('call ended');
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -332,10 +288,6 @@ socket.on('answer', (obj)=>{
       setRemoteDescriptionSuccess(localPeerConnection);
   }).catch(setSessionDescriptionError);
 });
-
-
-
-
 
 
 
