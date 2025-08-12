@@ -3,7 +3,9 @@
 <head>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>webRTC</title>
-	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sh0284-ggOyR0iXCbMQv3Xipm024MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	<link rel="preconnect" href="https://stackpath.bootstrapcdn.com" crossorigin>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<link rel="preload" href="/js/main.js" as="script">
 	<style type="text/css">
 		video {
 			max-width: 100%;
@@ -47,15 +49,8 @@
 		</div>
 	</div>
 
-
-
-
-	<script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-	<script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-	<script src="/socket.io/socket.io.js"></script>
-	<script type="text/javascript" src="/js/main.js"></script>
-
-
+	<script src="https://webrtc.github.io/adapter/adapter-latest.js" defer></script>
+	<script src="/socket.io/socket.io.js" defer></script>
+	<script type="text/javascript" src="/js/main.js" defer></script>
 </body>
 </html>

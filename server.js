@@ -1,6 +1,8 @@
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
+const compression = require('compression');
+const helmet = require('helmet');
 var app = express();
 var options = {
 key: fs.readFileSync('selfsigned.key'),
@@ -9,11 +11,31 @@ cert: fs.readFileSync('selfsigned.crt')
 var server = https.createServer(options, app);
 var io = require('socket.io')(server);
 var users = {};
-app.use(express.static('public'));
 
+// Security headers and gzip compression
+app.use(helmet());
+app.use(compression());
+
+// Static assets with caching by type
+app.use(express.static('public', {
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, path) => {
+    if (path.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-store');
+    } else if (path.match(/\.(?:js|css)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+    } else if (path.match(/\.(?:png|jpg|jpeg|gif|svg|webp|ico)$/)) {
+      res.setHeader('Cache-Control', 'public, max-age=2592000'); // 30 days
+    } else {
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // default 1 hour
+    }
+  }
+}));
 
 // serving index.html on request to homepage..
 app.get('/', function(req, res){
+  res.setHeader('Cache-Control', 'no-store');
   res.sendFile(__dirname + '/index.html');
 });
 
