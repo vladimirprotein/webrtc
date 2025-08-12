@@ -6,6 +6,10 @@ var socket = io();
 const localVideo = document.getElementById('localvideo');
 const remoteVideo = document.getElementById('remotevideo');
 
+const usernameInput = document.getElementById('username');
+const calleeInput = document.getElementById('callee');
+const displayUsername = document.getElementById('displayusername');
+
 let localStream;
 let remoteStream;
 var localPeerConnection;
@@ -13,19 +17,8 @@ var localPeerConnection;
 const servers = {
     'iceServers': [
     {
-      'url': 'stun:stun.l.google.com:19302'
+      'urls': 'stun:stun.l.google.com:19302'
     }
-    // ,
-    // {
-    //   'url': 'turn:192.158.29.39:3478?transport=udp',
-    //   'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-    //   'username': '28224511:1379330808'
-    // },
-    // {
-    //   'url': 'turn:192.158.29.39:3478?transport=tcp',
-    //   'credential': 'JZEOEt2V3Qb0y27GRntt2u2PAYA=',
-    //   'username': '28224511:1379330808'
-    // }
     ]
 };
 
@@ -34,38 +27,21 @@ const callButton = document.getElementById('call');
 const endButton = document.getElementById('end');
 const usernameButton = document.getElementById('usernamesubmit');
 
-
-// setting media stream constraints to pass as an argument to getUserMedia
-// for local video element with no audio
-const mediaStreamConstraintsL = {
-	video:true,
-	audio:false,
-};
-// for remote video element with audio
+// media stream constraints for both local preview and sending
 const mediaStreamConstraints = {
-	video:true,
-	audio:true,
+	video: true,
+	audio: true,
 };
 
-// getting webcam stream for local video element
-navigator.mediaDevices.getUserMedia(mediaStreamConstraintsL)
+// Single getUserMedia call for both preview and sending
+navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
 	.then(function(stream){
 		localVideo.srcObject = stream;
+		localStream = stream;
+		trace('Local media stream ready.');
 	}).catch(handleLocalMediaStreamError);
-trace('Requested stream for local video element. ');
+trace('Requested local media stream with audio.');
 
-// set localstream (with audio) for sending to other peer.
-navigator.mediaDevices.getUserMedia(mediaStreamConstraints)
-	.then(gotLocalMediaStream).catch(handleLocalMediaStreamError);
-trace('Requesting stream with audio for sending purpose.');
-
-
-// callback for get local user media stream
-function gotLocalMediaStream(stream) {
-	//localVideo.srcObject = stream;
-    localStream = stream;
-    trace('localStream ready to send');
-}
 // error handling function for getting local media stream..
 function handleLocalMediaStreamError(error) {
     trace(`navigator.getUserMedia error: ${error.toString()}.`);
@@ -78,18 +54,17 @@ function gotRemoteMediaStream(event) {
     trace('Remote peer connection received remote stream.');
 }
 
-
 // bind click event on set username button.. (function definition for setting username)
-$('#usernamesubmit').click((e)=>{
+usernameButton.addEventListener('click', (e)=>{
 	e.preventDefault();
-	var username = $('#username').val();
+	var username = usernameInput.value;
 	trace('setting username '+username);
 	socket.emit('new user', {name: username}, (data)=>{
 		//callback function definition..
 		if(data == 'success'){
-			$('#displayusername').html('username: '+ $('#username').val().toLowerCase().trim());
-			window.myend = $('#username').val().toLowerCase().trim();
-			$('#username').val('');
+			displayUsername.textContent = 'username: ' + usernameInput.value.toLowerCase().trim();
+			window.myend = usernameInput.value.toLowerCase().trim();
+			usernameInput.value = '';
 		}
 		else{
 			alert(data);
@@ -97,12 +72,10 @@ $('#usernamesubmit').click((e)=>{
 	});
 });
 
-
-
 // bind click event on call button.. (function definition for call button)
-$('#call').click((e)=>{
+callButton.addEventListener('click', (e)=>{
 	e.preventDefault();
-	var callee = $('#callee').val().toLowerCase().trim();
+	var callee = calleeInput.value.toLowerCase().trim();
 	socket.emit('call request', {callee: callee}, (data)=>{
 		if(data == 'success'){
 			window.otherend = callee;
@@ -129,7 +102,6 @@ $('#call').click((e)=>{
 
             socket.emit('call button clicked', {callee: window.otherend});
 
-
     		// adding local stream to local peer connection..
     		localPeerConnection.addStream(localStream);
     		trace('Added local stream to localPeerConnection.');
@@ -150,7 +122,6 @@ $('#call').click((e)=>{
     });
 });
 
-
 function handleConnection(event){
 	var iceCandidate = event.candidate;
 	if(iceCandidate){
@@ -163,31 +134,19 @@ function handleConnection(event){
 function handleConnectionChange(event) {
     const peerConnection = event.target;
     console.log('ICE state change event: ', event);
-    // trace(`${getPeerName(peerConnection)} ICE state: ` +
-    //  `${peerConnection.iceConnectionState}.`);
     trace('INSIDE handleConnectionChange');
 }
 function createdOffer(description){
-	//trace(`Offer from localPeerConnection:\n${description.sdp}`);
-    trace('localPeerConnection setLocalDescription start.');
+	trace('localPeerConnection setLocalDescription start.');
     localPeerConnection.setLocalDescription(description);
-    // .then(() => {
-    //  	setLocalDescriptionSuccess(localPeerConnection);
-    // }).catch(setSessionDescriptionError);
-    // console.log(callee)
 
-socket.emit('local description', {callee: window.otherend, description: JSON.stringify(description)});
-trace('Offer created from my side..');
+    socket.emit('local description', {callee: window.otherend, description: JSON.stringify(description)});
+    trace('Offer created from my side..');
 }
 
 function createdAnswer(description){
-	//trace(`Answer from remotePeerConnection:\n${description.sdp}.`);
-
    trace('Setting my local description..');
    localPeerConnection.setLocalDescription(description);
-    // .then(() => {
-    //   setLocalDescriptionSuccess(localPeerConnection);
-    // }).catch(setSessionDescriptionError);
 
     socket.emit('answer', {caller: window.otherend, description: JSON.stringify(description)});
     trace('Sent my description to the caller..');
@@ -211,7 +170,7 @@ function setRemoteDescriptionSuccess(peerConnection) {
   setDescriptionSuccess(peerConnection, 'setRemoteDescription');
 }
 // bind click event on end button.. (function definition for end button)
-$('#end').click((e)=>{
+endButton.addEventListener('click', (e)=>{
 	e.preventDefault();
 	remoteVideo.srcObject = null;
 	localPeerConnection.close();
@@ -288,10 +247,6 @@ socket.on('call ended', (obj)=>{
 	localPeerConnection.close();
 	alert('Other user ended the call');
 })
-
-
-
-
 
 // Logs an action (text) and the time when it happened on the console.
 function trace(text){
